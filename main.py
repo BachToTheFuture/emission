@@ -1,8 +1,11 @@
-from flask import Flask, render_template, url_for, request, redirect, flash
-
+from flask import Flask, render_template, url_for, request, redirect, flash, Response, make_response, jsonify
 import db
 app = Flask('app')
 app.secret_key = 'super secret string'  # Change this!
+
+uiPathAnswers = {}
+doUI = True
+uiAsk = "hamburger"
 
 import logging
 log = logging.getLogger('werkzeug')
@@ -14,8 +17,10 @@ login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 
 class User(flask_login.UserMixin):
-    pass
-	
+  pass
+
+################### LOGIN STUFF
+
 @login_manager.user_loader
 def user_loader(username):
     if not db.checkUser("username", username):
@@ -34,10 +39,9 @@ def request_loader(request):
 			return
 		user = User()
 		user.id = username
-		
-		#user.is_authenticated = True; # this line is useless LOL
-		print(user)
 		return user
+
+############################ NO CACHE
 
 @app.after_request
 def add_header(r):
@@ -50,6 +54,8 @@ def add_header(r):
 		r.headers["Expires"] = "0"
 		r.headers['Cache-Control'] = 'public, max-age=0'
 		return r
+
+############################ ROUTES
 
 @app.route('/')
 def index():
@@ -65,24 +71,33 @@ def login():
 		# Registration
 		if request.form["password2"]:
 			# Check if the user already exists
-			"""
+			if (pwrd != request.form["password2"]):
+				flash("Passwords do not match!")
+				return render_template('login.html')
+			if (len(pwrd) < 6):
+				flash("Password must be at least 6 characters.")
+				return render_template('login.html')
+		
 			if db.checkUser("username", name):
-				flash("User {} already exists!")
+				flash("User '{}' already exists!".format(name))
 				return render_template('login.html')
 			else:
-			"""
-			print("New user {} registered!".format(name))
-			db.addUser(name, pwrd)
-			flash("User created!")
-			return render_template('login.html', newuser=True)
+				print("New user {} registered!".format(name))
+				db.addUser(name, pwrd)
+				flash("User created!")
+				return render_template('login.html', newuser=True)
+			
 		# Validated user
 		elif db.checkUser("username", name) and db.checkPassword(name, pwrd):
 			print(name, "has been verified!")
 			user = User()
 			user.id = request.form["username"]
+			userid = str(db.getPartWith('username', user.id, '_id'))
+			resp = make_response(redirect(url_for('dashboard')))
+			resp.set_cookie('userID', userid)
 			flask_login.login_user(user)
-			return redirect(url_for('dashboard'))
-		# Incorrect username/password/user doesn't exist
+			return resp
+
 		else:
 			print("Unauthorized")
 			flash("Incorrect credentials!")
@@ -102,14 +117,26 @@ The following pages require authentication
 Current user's username is stored in this variable: flask_login.current_user.id
 """
 
-@app.route('/dashboard')
+@app.route('/dashboard', methods=['GET', 'POST'])
 @flask_login.login_required
 def dashboard():
-	#cookie = request.cookies.get('userID')
-	print('Logged in as: ' + flask_login.current_user.id)
-	#if not db.checkUser('_id', cookie):
-	#	return redirect('/login')
-	return render_template('index.html', username=flask_login.current_user.id)
+	username = flask_login.current_user.id
+	print('Logged in as: ' + username)
+	userid = request.cookies.get('userID')
+	#print(db.get_data(userid, []))
+	scores = db.get_data(userid, ['score'])["score"]
+
+	activities = db.get_data(userid, ['activities'])
+	if request.method == 'POST' and request.form:
+		activities = {}
+		date = "d" + request.form["date"].replace("/", '_')
+		for i, val in request.form.items():
+			if i == 'date': continue
+			if val.lstrip('-+').isdigit(): val = int(val)
+			activities['activities.' + i.replace('-', '.') + '.' + date] = val
+		db.updateActivities(userid, activities)
+		flash("Your responses have been saved!")
+	return render_template('index.html', username=username)
 
 @app.route('/logout')
 @flask_login.login_required
@@ -130,17 +157,106 @@ def settings():
 	username = flask_login.current_user.id
 	return render_template('settings.html', username=username)
 
+@app.route('/chatbot')
+@flask_login.login_required
+def chatbot():
+	username = flask_login.current_user.id
+	return render_template('chatbot.html', username=username)
+
+@app.route('/map')
+@flask_login.login_required
+def mapPage():
+	username = flask_login.current_user.id
+	return render_template('map.html', username=username)
+
 @app.route('/profile')
 @flask_login.login_required
 def profile():
 	username = flask_login.current_user.id
-	return render_template('profile.html', username=username)
 
+	userid = request.cookies.get('userID')
+	friends = db.get_data(userid, ['friends'])
+	friends = [] if 'friends' not in friends else friends["friends"]
+	return render_template('profile.html', username=username, friends=friends)
 
 @app.route('/information')
 @flask_login.login_required
 def info():
 	username = flask_login.current_user.id
 	return render_template('information.html', username=username)
+
+@app.route('/get-info', methods=['POST'])
+@flask_login.login_required
+def getInfo():
+	data = request.get_json()['parts']
+	userid = request.cookies.get('userID')
+	re = db.get_data(userid, data)
+	return jsonify(re)
+
+@app.route('/save-scores', methods=['POST'])
+@flask_login.login_required
+def saveScore():
+	data = request.get_json()
+	userid = request.cookies.get('userID')
+	db.updateActivities(userid, data)
+	return jsonify({})
+
+@app.route('/get-leader', methods=['POST'])
+@flask_login.login_required
+def getLeader():
+	userid = request.cookies.get('userID')
+	re = db.get_leaderboard(userid)
+	return jsonify(re)
+
+@app.route('/foodCalorie', methods=['POST'])
+@flask_login.login_required
+def foodCalorie():
+	global uiAsk, doUI, uiPathAnswers
+	data = request.get_json()['food']
+	print('getting', data)
+	uiAsk = data
+	doUI = True
+	while data not in uiPathAnswers:
+		pass
+	return jsonify({'answer': uiPathAnswers[data]})
+
+@app.route('/ui-data', methods=['POST'])
+def uiData():
+	global uiPathAnswers
+	data = request.get_json()
+	print("DATA", data)
+	food = data['food']
+	calories = data['calories']
+	uiPathAnswers[food] = calories
+	return jsonify({})
+
+@app.route('/ui-go', methods=['POST'])
+def goUI():
+	global doUI
+	if doUI:
+		doUI = False
+		return jsonify({"go": True, "food": uiAsk})
+	return jsonify({"go": False})
+
+@app.route('/befriend', methods=['POST'])
+@flask_login.login_required
+def befriend():
+	userid = request.cookies.get('userID')
+	othername = request.get_json()['name']
+	db.befriend(userid, othername)
+	return ""
+
+@app.route('/search', methods=['POST'])
+def searchNames():
+	name = request.get_json()['name']
+	return jsonify({'names': db.search_names(name)})
+
+@app.route('/google-cloud', methods=['POST'])
+def cloud():
+	j = request.get_json()
+	print(j)
+	return jsonify({})
+
+
 
 app.run(host='0.0.0.0', port=8080, debug=True)

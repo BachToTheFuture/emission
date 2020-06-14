@@ -1,148 +1,106 @@
 <!DOCTYPE html>
 <html>
 
+<!-- Possible addition: depending on which button clicked by the user on dashboard, open the drop down menu to the one selected
+    Change survey layout to have less asymmetric spacing
+    Set the values for the overview to be the last edited
+    Only accept one entry for other surveys daily, but also add edit function
+-->
+
 <head>
 	{% include "partials/header.html" %}
-
-	<link rel="stylesheet" href="/static/styles/profile.css"> {% include "partials/full navbar.html" %}
+  {% include "partials/full navbar.html" %}
+	<link rel="stylesheet" href="/static/styles/profile.css"> 
 </head>
 
-<body>
+<body id="profile-page">
+
+	<iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
+	
 	<center>
-		<h2> Profile </h2>
+		<h2> Profile </h2> <br>
+    <h3 id="sustainability_score">Sustainability Score: {{score}}</h3>
+		<div class='spread'>
+			<div class="down left">
+					<h5> Overview </h5>
+						<div class="area-description-container">
+							<div class="area-description">
+								<img class="rounded-circle" src="/static/images/transit.png" alt="transportation" width="100" height="100">
+							</div>
+							<div class="area-description">
+								<p> Your transit causes __ tons of CO2 emissions per year.<p> 
+								<p> Your carbon emissions caused by transit are higher than __ % of people.<p> <br>
+							</div> 
 
-		<div class="grid-container">
-			<div class="grid-item">
+							<div class="area-description">
+								<img class="rounded-circle" src="/static/images/diet.png" alt="diet" width="100" height="100">
+							</div>
+							<div class="area-description">
+								<p> descripty things descripty things descripty things descripty things descripty things descripty things descripty things<p> <br>
+							</div> 
 
-				<p> Badges </p>
-				<div class="badge-container">
-					<div class="badge">
-						<img src="static/images/badge.png" width=50%>
-            </div>
+							<div class="area-description">
+								<img class="rounded-circle" src="/static/images/energy.png" alt="Energy" width="100" height="100">
+							</div>
+							<div class="area-description">
+								<p> descripty things descripty things descripty things descripty things descripty things descripty things descripty things<p> <br>
+							</div> 
 
-            <div class="badge">
-              <img src="static/images/badge.png" width=50%>
-            </div>
+							<div class="area-description">
+									<img class="rounded-circle" src="/static/images/wardrobe.png" alt="wardrobe" width="100" height="100">
+							</div>
+							<div class="area-description">
+								<p> descripty things descripty things descripty things descripty things descripty things descripty things descripty things<p> <br>
+							</div>
 
-            <div class="badge">
-              <img src="static/images/badge.png" width=50%>
-            </div>
+							<div class="area-description">
+									<img class="rounded-circle" src="/static/images/recycling.png" alt="Recycling" width="100" height="100">
+							</div>
+							<div class="area-description">
+								<p> descripty things descripty things descripty things descripty things descripty things descripty things descripty things<p> <br>
+							</div> 
+							
+							<div class="area-description">
+								<img class="rounded-circle" src="/static/images/water.png" alt="water" width="100" height="100">
+							</div>
+							<div class="area-description">
+								<p> descripty things descripty things descripty things descripty things descripty things descripty things descripty things<p> <br>
+							</div> 
+				
+				</div>	
+			</div>
 
-            <div class="badge">
-              <img src="static/images/badge.png" width=50%>
-            </div>
-          </div>
-        
-        <br><br>
-        <p> Challenges </p>
-        </div>
-		
-        <div class="grid-item">
-          <select class="form-control form-control-lg" name="select-menu" id="select_type" onchange="flipDescription()">
-            <option value="general-transit"> General Transit </option>
-            <option value="daily-transit"> Daily Transit </option>
-            <option value="diet"> Diet </option>
-            <option value="energy"> Energy </option>
-            <option value="wardrobe"> Wardrobe </option>
-            <option value="recycling"> Recycling </option>
-            <option value="water"> Water </option>
-          </select>
+      <div id = 'gradesystem'>
+        <img src = "/static/images/gradescale.png" alt = "Grade Scale" width = "250">
+      </div>
 
-          
-          <form id="general-transit-survey" class ="description">
-            <p> Have many times have you flown this year? </p>
-            <div class="slidercontainer">
-              <input type="range" min="1" max="50" value = "25" class="slider" id="myRange">
-            </div>
-            <label id="flight_val"> </label>
+			<div id='friend-box'>
+				<input type='text' placeholder='Search For Friends!' id='user-search' oninput="search()"></input>
+				<div id='name-preview'></div>
 
-            <p> Average flight time? </p>
-            <div class="slidercontainer">
-              <input type="range" min="1" max="50" value = "25" class="slider"">
-            </div>
+				<div id='friend-list'>
+					<h3>Friends</h3>
 
-            <p> How many miles do you drive everyday? </p>
-            <div class="slidercontainer">
-              <input type="range" min="1" max="50" value = "25" class="slider"">
-            </div>
+					{% for friend in friends %}
+            <p onclick="befriend({{friend}})">{{friend}}</p>
+					{% endfor %}
 
-            <p> How many miles per gallon does your car get? </p>
-            <div class="slidercontainer">
-                <input type="range" min="1" max="50" value = "25" class="slider" >
-            </div>
-            <p> </p>
-            <input class="submit-button" type="submit">
-          </form>
+				</div>
 
-          <form id="daily-transit-survey" class = "description hide">
-            <p> How far did you drive today? </p>
-            <div class="slidercontainer">
-              <input type="range" min="1" max="50" value = "25" class="slider" >
-            </div>
-            <p> </p>
-            <input class="submit-button" type="submit">
-          </form>
-
-          <form id="diet-survey" class = "description hide">
-            <p> QUESTION? </p>
-            <div class="slidercontainer">
-              <input type="range" min="1" max="50" value = "25" class="slider" >
-            </div>
-            <p> </p>
-            <input class="submit-button" type="submit">
-          </form>
-
-          <form id="energy-survey" class = "description hide">
-            <p> QUESTION? </p>
-            <div class="slidercontainer">
-              <input type="range" min="1" max="50" value = "25" class="slider" >
-            </div>
-            <p> </p>
-            <input class="submit-button" type="submit">
-          </form>
+			</div>
 
 
-          <form id="wardrobe-survey" class = "description hide">
-            <p> QUESTION? </p>
-            <div class="slidercontainer">
-              <input type="range" min="1" max="50" value = "25" class="slider>
-            </div>
-            <p> </p>
-            <input class="submit-button" type="submit">
-          </form>
+		</div>
 
-
-          <form id="recycling-survey" class = "description hide">
-            <p> QUESTION? </p>
-            <div class="slidercontainer">
-              <input type="range" min="1" max="50" value = "25" class="slider>
-            </div>
-            <p> </p>
-            <input class="submit-button" type="submit">
-          </form>
-
-
-
-          <form id="water-survey" class = "description hide">
-            <p> QUESTION? </p>
-            <div class="slidercontainer">
-              <input type="range" min="1" max="50" value = "25" class="slider>
-            </div>
-            <p> </p>
-
-            <input class="submit-button" type="submit">
-          </form>
-        </div>
-   
-        
-     </div>
 
     
-    
-    </center>
+  </center>
 
+
+    <script src="/static/scripts/index.js"></script>
 		{% include "partials/include js.html" %}
-    
     <script src="/static/scripts/profile.js"></script>
+      	
+
 	</body>
 </html>
