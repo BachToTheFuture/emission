@@ -24,8 +24,6 @@ p {
 	border-radius:10px;
 }
 
-
-
 a {
 	font-weight:600 !important;
 	color: #7fcdfa;
@@ -74,6 +72,8 @@ body {
 	border-radius:10px;
 	padding:10px;
 	height:50vh;
+	overflow-y: hidden;
+  overflow-x: hidden;
 }
 
 .carousel h3 {
@@ -89,18 +89,19 @@ body {
 }
 
 .carousel-item {
-  object-fit: contain;
+  object-fit: scale-down;
   height:47vh;
-  background-color: white;
+  background-image: url("https://cdn.discordapp.com/attachments/720097811135201291/721609507167535125/oop.png");
 }
 .carousel-item > img {
-  object-fit: contain;
+  object-fit: scale-down;
   position: absolute;
   top: 0;
   left: 0;
   min-width: 100%;
   height: 32rem;
 }
+
 
 .carousel-control-next-icon {
     background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='red' viewBox='0 0 8 8'%3E%3Cpath d='M2.75 0l-1.5 1.5 2.5 2.5-2.5 2.5 1.5 1.5 4-4-4-4z'/%3E%3C/svg%3E");
@@ -200,6 +201,23 @@ body {
 	align-items: center;
 }
 
+
+/* Random badges */
+.badge-a {
+	background: #6BD6A0;
+}
+.badge-b {
+	background: #A9FC72;
+}
+.badge-c {
+	background: #F9DC67;
+}
+.badge-d {
+	background: #F1A16B;
+}
+.badge-f {
+	background: #ED6F63;
+}
 .slidecontainer {
   width: 100%; /* Width of the outside container */
 }
@@ -249,3 +267,18 @@ body {
 .checkbox_label {
   font-family: 'Montserrat', sans-serif;
 }
+
+.caloriecounter{
+  background-image: url("https://cdn.discordapp.com/attachments/720097811135201291/721609507167535125/oop.png");
+  margin-top: 5%;
+  margin-left: 8%;
+}
+
+#calories{
+  /* margin-left: 3%; */
+	font-size: 1.5em;
+	display: block;
+	width: 80%;
+}
+
+
